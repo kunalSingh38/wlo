@@ -15,6 +15,7 @@ import 'package:wlo_master/screens/create_tip.dart';
 import 'package:wlo_master/screens/customer.dart';
 import 'package:wlo_master/screens/customer_pagination.dart';
 import 'package:wlo_master/screens/edit_customer.dart';
+import 'package:wlo_master/screens/inbox_messages.dart';
 import 'package:wlo_master/screens/job_complete.dart';
 import 'package:wlo_master/screens/job_details.dart';
 import 'package:wlo_master/screens/job_pagination.dart';
@@ -284,6 +285,13 @@ class _MyAppState extends State<MyApp> {
             var obj = settings.arguments;
             return PageTransition(
               child: EditCustomers(argument: obj),
+              type: null,
+              settings: settings,
+            );
+            break;
+          case '/inbox-message':
+            return PageTransition(
+              child: InboxMessages(),
               type: null,
               settings: settings,
             );

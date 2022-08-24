@@ -20,6 +20,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wlo_master/components/CustomRadioWidget.dart';
 import 'package:wlo_master/components/general.dart';
+import 'package:wlo_master/screens/conversation.dart';
 
 import 'package:wlo_master/services/shared_preferences.dart';
 
@@ -66,7 +67,7 @@ class _ChangePageState extends State<JobsDetails> {
   var _type = "";
   var customer_accounttype = "";
   var displayDropDown = "";
-
+  String jobName = "";
   @override
   void initState() {
     super.initState();
@@ -272,6 +273,7 @@ class _ChangePageState extends State<JobsDetails> {
           " - " +
           data['data']['product']['product_ewc'].toString();
       _productData = _getProductCategories();
+      jobName = data['data']['customer']['customer_businessname'].toString();
       return data;
     } else if (response.statusCode == 401) {
       SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -997,14 +999,19 @@ class _ChangePageState extends State<JobsDetails> {
             color: Color(0xfffbefa7),
           ),
           actions: <Widget>[
-            /* IconButton(
-              icon: Image(
-                image: AssetImage("assets/images/notifications.png"),
-                height: 30.0,
-                width: 30.0,
-              ),
-              onPressed: () async {},
-            ),*/
+            IconButton(
+                onPressed: () {
+                  // print(job_id.toString());
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Conversation(
+                                jobId: job_id.toString(),
+                                jobName: jobName,
+                              )));
+                },
+                icon: Icon(Icons.message, color: Color(0xffb5322f)))
           ],
           iconTheme: IconThemeData(
             color: Colors.white, //change your color here

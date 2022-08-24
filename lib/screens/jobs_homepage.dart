@@ -455,6 +455,9 @@ class _ChangePageState extends State<JobsScreen> {
                       } else if (item.title == "Change Password") {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/change-password');
+                      } else if (item.title == "Inbox") {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/inbox-message');
                       }
                     },
                     child: ListTile(
@@ -1332,20 +1335,19 @@ class _ChangePageState extends State<JobsScreen> {
               .split(" ")[0]))) {
         forred = true;
       }
-      if (firstDay.isBefore(DateTime.parse(
-              loc[i]['date'].toString().split('-').reversed.join())) &&
-          lastday.isAfter(DateTime.parse(
-              loc[i]['date'].toString().split('-').reversed.join())) &&
-          DateTime.parse(DateTime.now().toString().split(" ")[0]).isBefore(
-              DateTime.parse(DateTime.parse(
-                      loc[i]['date'].toString().split('-').reversed.join())
-                  .toString()
-                  .split(" ")[0]))    ||
-                  DateTime.parse(DateTime.now().toString().split(" ")[0])
-                      .isAtSameMomentAs(DateTime.parse(DateTime.parse(
-                              loc[i]['date'].toString().split('-').reversed.join())
+      if (firstDay.isBefore(DateTime.parse(loc[i]['date'].toString().split('-').reversed.join())) &&
+              lastday.isAfter(DateTime.parse(
+                  loc[i]['date'].toString().split('-').reversed.join())) &&
+              DateTime.parse(DateTime.now().toString().split(" ")[0]).isBefore(
+                  DateTime.parse(
+                      DateTime.parse(loc[i]['date'].toString().split('-').reversed.join())
                           .toString()
-                          .split(" ")[0]))) {
+                          .split(" ")[0])) ||
+          DateTime.parse(DateTime.now().toString().split(" ")[0])
+              .isAtSameMomentAs(DateTime.parse(
+                  DateTime.parse(loc[i]['date'].toString().split('-').reversed.join())
+                      .toString()
+                      .split(" ")[0]))) {
         match = true;
       }
 

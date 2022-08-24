@@ -19,6 +19,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wlo_master/components/CustomRadioWidget.dart';
 import 'package:wlo_master/components/general.dart';
+import 'package:wlo_master/screens/send_mesage.dart';
 
 import 'package:wlo_master/services/shared_preferences.dart';
 
@@ -197,6 +198,7 @@ class _ChangePageState extends State<JobsScreen11> {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $access_token',
     };
+    print(access_token.toString());
     var uri = Uri.parse(URL + '/config');
     var response = await http.get(
       uri,
@@ -503,6 +505,9 @@ class _ChangePageState extends State<JobsScreen11> {
                       } else if (item.title == "Change Password") {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/change-password');
+                      }else if (item.title == "Inbox") {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/inbox-message');
                       }
                     },
                     child: ListTile(
@@ -1863,7 +1868,7 @@ class _ChangePageState extends State<JobsScreen11> {
                       Align(
                         alignment: Alignment.topLeft,
                         child: Container(
-                          width: MediaQuery.of(context).size.width * 0.85,
+                          width: MediaQuery.of(context).size.width * 0.55,
                           child: Row(children: [
                             Container(
                               padding: EdgeInsets.only(right: 6),
@@ -1880,6 +1885,44 @@ class _ChangePageState extends State<JobsScreen11> {
                                   style: normalText12),
                             ),
                           ]),
+                        ),
+                      ),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: ((context) => SendMessage(
+                                            messageFor: users[index]['customer']
+                                                    ['customer_businessname']
+                                                .toString(),
+                                                jobId: users[index]['id'].toString(),
+                                          ))));
+                            },
+                            child: Container(
+                              child: Row(children: [
+                                Image(
+                                  image:
+                                      AssetImage("assets/images/message.png"),
+                                  height: 17.0,
+                                  width: 17.0,
+                                ),
+                                SizedBox(
+                                  width: 5.0,
+                                ),
+                                Expanded(
+                                  child: Text("Send Message",
+                                      softWrap: true,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: normalTex4),
+                                ),
+                              ]),
+                            ),
+                          ),
                         ),
                       ),
                     ]),
