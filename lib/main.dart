@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,10 +33,26 @@ import 'package:wlo_master/screens/square_pay.dart';
 import 'package:wlo_master/screens/successful_screen.dart';
 import 'package:wlo_master/screens/view_checklist.dart';
 import 'package:wlo_master/screens/view_single_checklist.dart';
+import 'package:wlo_master/services/PushNotificationService.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey(debugLabel: "Main Navigator");
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('A bg message just showed up :  ${message.messageId}');
+}
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp(); //for app
+  await PushNotificationService().setupInteractedMessage(navigatorKey);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(MyApp());
+  RemoteMessage initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    // App received a notification when it was killed
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -92,6 +111,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: createMaterialColor(Color(0xfffbefa7)),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
         switch (settings.name) {

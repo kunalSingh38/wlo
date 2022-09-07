@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:badges/badges.dart';
 import 'package:bordered_text/bordered_text.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -24,6 +25,7 @@ class _InboxMessagesState extends State<InboxMessages> {
 
   @override
   List inboxMessages = [];
+  List inboxMessagesCopy = [];
   bool isLoading = true;
 
   Future<void> getAllInboxMessages() async {
@@ -36,12 +38,15 @@ class _InboxMessagesState extends State<InboxMessages> {
       Uri.parse(URL + "/messages"),
       headers: headers,
     );
+    setState(() {
+      isLoading = false;
+    });
     if (jsonDecode(response.body)['status'] == 200) {
       setState(() {
         inboxMessages.clear();
+        inboxMessagesCopy.clear();
         inboxMessages.addAll(jsonDecode(response.body)['data']);
-
-        isLoading = false;
+        inboxMessagesCopy.addAll(jsonDecode(response.body)['data']);
       });
     }
   }
@@ -85,16 +90,7 @@ class _InboxMessagesState extends State<InboxMessages> {
           height: 100,
           color: Color(0xfffbefa7),
         ),
-        actions: <Widget>[
-          /*IconButton(
-              icon: Image(
-                image: AssetImage("assets/images/notifications.png"),
-                height: 30.0,
-                width: 30.0,
-              ),
-              onPressed: () async {},
-            ),*/
-        ],
+        actions: <Widget>[],
         iconTheme: IconThemeData(
           color: Colors.white, //change your color here
         ),
@@ -110,12 +106,37 @@ class _InboxMessagesState extends State<InboxMessages> {
               child: TextFormField(
                 controller: searchCont,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    List dummyListData = [];
+
+                    inboxMessagesCopy.forEach((item) {
+                      if (item['customer']['customer_businessname']
+                          .toString()
+                          .toUpperCase()
+                          .contains(value.toUpperCase())) {
+                        dummyListData.add(item);
+                      }
+                    });
+                    setState(() {
+                      inboxMessages.clear();
+                      inboxMessages.addAll(dummyListData.toSet().toList());
+                    });
+                    return;
+                  } else {
+                    setState(() {
+                      inboxMessages.clear();
+                      inboxMessages.addAll(inboxMessagesCopy);
+                    });
+                  }
+                },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10)),
                   contentPadding: EdgeInsets.all(0),
+                  focusColor: Colors.black,
                   focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.lightBlue),
+                      borderSide: BorderSide(color: Colors.black),
                       borderRadius: BorderRadius.circular(10)),
                   hintText: "Search for contacts",
                   hintStyle: TextStyle(
@@ -219,6 +240,7 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
       headers: headers,
     );
     print(URL + "/messages/customer/" + widget.m['customer_id'].toString());
+    print(response.body);
     if (jsonDecode(response.body)['status'] == 200) {
       setState(() {
         messages.clear();
@@ -298,10 +320,11 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: ListTile(
-                        title: Row(
+                        title: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
@@ -314,34 +337,78 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                                     color: Colors.red[800],
                                   ),
                                 ),
-                                SizedBox(
-                                  height: 5,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                          border: Border.all(),
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(4)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              messages[index]['ping']
+                                                          .toString() ==
+                                                      "inbound-api"
+                                                  ? "In"
+                                                  : "Out",
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.black),
+                                            ),
+                                            messages[index]['ping']
+                                                        .toString() ==
+                                                    "inbound-api"
+                                                ? Image.asset(
+                                                    "assets/images/arrow-down.png",
+                                                    scale: 40,
+                                                  )
+                                                : Image.asset(
+                                                    "assets/images/arrow-up.png",
+                                                    scale: 40,
+                                                  )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text(
+                                      "DATE",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Colors.red[800]),
+                                    ),
+                                  ],
                                 ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
                                 Text(
                                   messages[index]['event']['resource']
                                       .toString()
                                       .toUpperCase(),
                                   style: TextStyle(
                                       fontWeight: FontWeight.w400,
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       // color: Color(int.parse(
                                       //     messages[index]['event']['color']))
                                       color: Colors.black),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "DATE",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: Colors.red[800]),
-                                ),
-                                SizedBox(
-                                  height: 5,
                                 ),
                                 Text(
                                   DateFormat.yMMMMd("en_US").add_jm().format(
@@ -349,8 +416,9 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                                               ['created_at']
                                           .toString())),
                                   style: TextStyle(
+                                      wordSpacing: 0.1,
                                       fontWeight: FontWeight.w400,
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       // color: Color(int.parse(
                                       //     messages[index]['event']['color']))
                                       color: Colors.black),
@@ -376,8 +444,12 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                               InkWell(
                                 onTap: () {
                                   print(customerDetails);
+                                  setState(() {
+                                    customMessage.clear();
+                                  });
                                   showDialog(
                                       context: context,
+                                      barrierColor: Colors.black,
                                       builder: (context) => AlertDialog(
                                             contentPadding: EdgeInsets.zero,
                                             content: Container(
@@ -498,6 +570,15 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                                                                       context)
                                                                   .pop();
                                                               getData();
+                                                            } else {
+                                                              Fluttertoast.showToast(
+                                                                  msg: jsonDecode(
+                                                                          response
+                                                                              .body)['message']
+                                                                      .toString());
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
                                                             }
                                                           }
                                                         },
@@ -537,14 +618,21 @@ class _FullDetailMessageState extends State<FullDetailMessage> {
                                       color: Colors.red[800],
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
-                                        child: Transform(
-                                            alignment: Alignment.center,
-                                            transform:
-                                                Matrix4.rotationY(math.pi),
-                                            child: Icon(
-                                              Icons.reply_all_outlined,
-                                              color: Colors.white,
-                                            )),
+                                        child: messages[index]['ping']
+                                                    .toString() ==
+                                                "inbound-api"
+                                            ? Icon(
+                                                Icons.reply_all_outlined,
+                                                color: Colors.white,
+                                              )
+                                            : Transform(
+                                                alignment: Alignment.center,
+                                                transform:
+                                                    Matrix4.rotationY(math.pi),
+                                                child: Icon(
+                                                  Icons.reply_all_outlined,
+                                                  color: Colors.white,
+                                                )),
                                       ),
                                     ),
                                   ),

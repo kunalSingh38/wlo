@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:badges/badges.dart';
 import 'package:bordered_text/bordered_text.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -19,6 +22,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wlo_master/components/CustomRadioWidget.dart';
 import 'package:wlo_master/components/general.dart';
+import 'package:wlo_master/main.dart';
 import 'package:wlo_master/screens/send_mesage.dart';
 
 import 'package:wlo_master/services/shared_preferences.dart';
@@ -86,12 +90,26 @@ class _ChangePageState extends State<JobsScreen11> {
 
   String callApi;
 
+  List notificationLis = [];
+  Future<void> getNotification() async {
+    var response = await http.get(Uri.parse(URL + "/message/unread"), headers: {
+      'Authorization': 'Bearer ' + access_token.toString(),
+      'Content-Type': 'application/json'
+    });
+    print(access_token);
+    print("---------" + response.body.toString());
+    if (jsonDecode(response.body)['status'] == 200) {
+      setState(() {
+        notificationLis.addAll(jsonDecode(response.body)['data']['messages']);
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _getUser();
-
-    // getWeek(DateTime.tryParse("2022-04-19"));
+    
   }
 
   // bool getWeek(DateTime today) {
@@ -125,6 +143,7 @@ class _ChangePageState extends State<JobsScreen11> {
             _myProfileData("", page1);
           }
         });
+        getNotification();
       });
     });
   }
@@ -505,16 +524,14 @@ class _ChangePageState extends State<JobsScreen11> {
                       } else if (item.title == "Change Password") {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/change-password');
-                      }else if (item.title == "Inbox") {
+                      } else if (item.title == "Inbox") {
                         Navigator.pop(context);
                         Navigator.pushNamed(context, '/inbox-message');
                       }
                     },
                     child: ListTile(
-                      leading: Image(
-                        image: AssetImage(item.icon),
-                        height: 20.0,
-                      ),
+                      leading: Image.asset(item.icon,
+                          color: Color(0xffb5322f), scale: 12),
                       title: Text(
                         item.title,
                         style: TextStyle(color: Color(0xffb5322f)),
@@ -1668,17 +1685,49 @@ class _ChangePageState extends State<JobsScreen11> {
                                         color: Colors.amber,
                                       ),
                           ),
-                          InkWell(
-                              onTap: () {
-                                showConfirmDialog(
-                                    users[index]['id'].toString(),
-                                    'Cancel',
-                                    'Remove',
-                                    'Remove Job',
-                                    'Are you sure want to remove this job?');
-                              },
-                              child: Container(
-                                  child: Text("Remove", style: normalText6))),
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: ((context) => SendMessage(
+                                                messageFor: users[index]
+                                                            ['customer'][
+                                                        'customer_businessname']
+                                                    .toString(),
+                                                jobId: users[index]['id']
+                                                    .toString(),
+                                              ))));
+                                },
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.yellow[300],
+                                  child: Icon(Icons.message,
+                                      color: Color(0xffb5322f)),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              InkWell(
+                                  onTap: () {
+                                    showConfirmDialog(
+                                        users[index]['id'].toString(),
+                                        'Cancel',
+                                        'Remove',
+                                        'Remove Job',
+                                        'Are you sure want to remove this job?');
+                                  },
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.yellow[300],
+                                    child: Icon(
+                                      Icons.delete,
+                                      color: Color(0xffb5322f),
+                                    ),
+                                  )),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -1868,61 +1917,25 @@ class _ChangePageState extends State<JobsScreen11> {
                       Align(
                         alignment: Alignment.topLeft,
                         child: Container(
-                          width: MediaQuery.of(context).size.width * 0.55,
-                          child: Row(children: [
-                            Container(
-                              padding: EdgeInsets.only(right: 6),
-                              child: Text("Remarks:", style: normalText12),
-                            ),
-                            SizedBox(
-                              width: 6.0,
-                            ),
-                            Expanded(
-                              child: Text(users[index]['job_remarks'],
-                                  softWrap: true,
-                                  maxLines: 5,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: normalText12),
-                            ),
-                          ]),
-                        ),
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: ((context) => SendMessage(
-                                            messageFor: users[index]['customer']
-                                                    ['customer_businessname']
-                                                .toString(),
-                                                jobId: users[index]['id'].toString(),
-                                          ))));
-                            },
-                            child: Container(
-                              child: Row(children: [
-                                Image(
-                                  image:
-                                      AssetImage("assets/images/message.png"),
-                                  height: 17.0,
-                                  width: 17.0,
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.only(right: 6),
+                                  child: Text("Remarks:", style: normalText12),
                                 ),
                                 SizedBox(
-                                  width: 5.0,
+                                  width: 6.0,
                                 ),
                                 Expanded(
-                                  child: Text("Send Message",
+                                  child: Text(users[index]['job_remarks'],
                                       softWrap: true,
-                                      maxLines: 2,
+                                      maxLines: 5,
                                       overflow: TextOverflow.ellipsis,
-                                      style: normalTex4),
+                                      style: normalText12),
                                 ),
                               ]),
-                            ),
-                          ),
                         ),
                       ),
                     ]),
@@ -1990,12 +2003,29 @@ class _ChangePageState extends State<JobsScreen11> {
               color: Color(0xfffbefa7),
             ),
             actions: <Widget>[
+              InkWell(
+                onTap: () {
+                  Navigator.pushNamed(context, '/inbox-message');
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Badge(
+                    badgeContent: Text(notificationLis.length.toString()),
+                    badgeColor: Colors.white,
+                    child: Icon(Icons.notifications, color: Color(0xffb5322f)),
+                  ),
+                ),
+              ),
+              // PopupMenuButton(
+              //     itemBuilder: (context) => notificationLis
+              //         .map((e) => PopupMenuItem(child: Text("data")))
+              //         .toList()),
               IconButton(
                 icon: Image(
                   image: AssetImage("assets/images/refresh.png"),
                   color: Color(0xffb5322f),
-                  height: 26.0,
-                  width: 26.0,
+                  height: 24.0,
+                  width: 24.0,
                 ),
                 onPressed: () async {
                   Navigator.pop(context);

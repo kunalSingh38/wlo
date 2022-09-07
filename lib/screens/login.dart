@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:bordered_text/bordered_text.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -25,6 +26,7 @@ class _SplashScreenState extends State<LoginScreen> {
   String selectedRegion;
   bool _loading = false;
   final _formKey = GlobalKey<FormState>();
+  String fcmToken = "";
   var _type = "";
   bool _autoValidate = false;
   bool _isHidden = true;
@@ -32,6 +34,12 @@ class _SplashScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _vehicleData = _getVehicleCategories();
+    FirebaseMessaging.instance.getToken().then((value) {
+      setState(() {
+        fcmToken = value.toString();
+        print(fcmToken);
+      });
+    });
   }
 
   TextStyle normalText = GoogleFonts.montserrat(
@@ -291,6 +299,7 @@ class _SplashScreenState extends State<LoginScreen> {
                           body: {
                             "empcode": empCodeController.text,
                             "password": pinController.text,
+                            "fcm_token": fcmToken.toString()
                           },
                           headers: headers,
                         );
@@ -298,6 +307,7 @@ class _SplashScreenState extends State<LoginScreen> {
                         print({
                           "empcode": empCodeController.text,
                           "password": pinController.text,
+                          "fcm_token": fcmToken.toString()
                         });
                         var data = json.decode(response.body);
                         print(data);

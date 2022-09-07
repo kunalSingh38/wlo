@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,7 +51,7 @@ class _ConversationState extends State<Conversation> {
   }
 
   TextEditingController message = TextEditingController();
-
+  int count = 0;
   @override
   void initState() {
     // TODO: implement initState
@@ -63,7 +64,7 @@ class _ConversationState extends State<Conversation> {
     return Scaffold(
       extendBodyBehindAppBar: false,
       resizeToAvoidBottomInset: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFfffffe),
       appBar: AppBar(
         leading: InkWell(
           child: IconButton(
@@ -92,7 +93,7 @@ class _ConversationState extends State<Conversation> {
         inAsyncCall: isLoading,
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 90),
+            padding: const EdgeInsets.only(bottom: 100, left: 10, right: 10),
             child: ListView(
               reverse: true,
               scrollDirection: Axis.vertical,
@@ -111,8 +112,8 @@ class _ConversationState extends State<Conversation> {
                                 decoration: BoxDecoration(
                                     color:
                                         e['ping'].toString() == "outbound-api"
-                                            ? Colors.green[500]
-                                            : Colors.grey[200],
+                                            ? Color(0xFF759464)
+                                            : Color(0xFFeeeeee),
                                     borderRadius: e['ping'].toString() ==
                                             "outbound-api"
                                         ? BorderRadius.only(
@@ -131,15 +132,19 @@ class _ConversationState extends State<Conversation> {
                                   child: Text(
                                     e['message'].toString(),
                                     style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold),
+                                        color: e['ping'].toString() ==
+                                                "outbound-api"
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(top: 2, right: 8),
+                            padding: const EdgeInsets.only(
+                                top: 2, right: 8, left: 8),
                             child: Align(
                                 alignment:
                                     e['ping'].toString() == "outbound-api"
@@ -164,59 +169,110 @@ class _ConversationState extends State<Conversation> {
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(0), topRight: Radius.circular(0)),
         child: Container(
-          color: Colors.grey[300],
-          height: 80,
+          color: Colors.white,
+          height: 95,
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: TextFormField(
-                controller: message,
-                // scrollPadding: EdgeInsets.only(bottom: 60),
-                decoration: InputDecoration(
-                    suffixIcon: TextButton(
-                      child: Text(
-                        "SEND",
-                        style: TextStyle(color: Colors.green),
-                      ),
-                      style: ButtonStyle(),
-                      onPressed: () async {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        SharedPreferences pref =
-                            await SharedPreferences.getInstance();
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      TextFormField(
+                          controller: message,
+                          maxLength: 160,
+                          textCapitalization: TextCapitalization.sentences,
+                          onChanged: (val) {
+                            setState(() {
+                              count = val.length;
+                            });
+                          },
+                          cursorColor: Colors.black,
+                          maxLines: 2,
+                          // scrollPadding: EdgeInsets.only(bottom: 60),
+                          decoration: InputDecoration(
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.all(10),
+                              counterText: "",
+                              focusColor: Colors.black,
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: Colors.black,
+                                ),
+                              ),
+                              fillColor: Color(0xFFf6faf2),
+                              filled: true,
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10)))),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10, top: 5),
+                        child: Text(
+                          "max length " + (160 - count).toString() + " char.",
+                          style: TextStyle(fontSize: 9),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                Expanded(
+                    child: InkWell(
+                  onTap: () async {
+                    if (message.text.toString().length > 0) {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      SharedPreferences pref =
+                          await SharedPreferences.getInstance();
 
-                        Map<String, String> headers = {
-                          'Content-Type': 'application/json',
-                          'Accept': 'application/json',
-                          'Authorization': 'Bearer ' +
-                              pref.getString("access_token").toString(),
-                        };
-                        var response =
-                            await http.post(Uri.parse(URL + "/message/create"),
-                                headers: headers,
-                                body: jsonEncode({
-                                  "customer_id": customer_id.toString(),
-                                  "event_id": widget.jobId.toString(),
-                                  "event": "job.create",
-                                  "message": message.text.toString()
-                                }));
-                        print(response.body);
+                      Map<String, String> headers = {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' +
+                            pref.getString("access_token").toString(),
+                      };
+                      var response =
+                          await http.post(Uri.parse(URL + "/message/create"),
+                              headers: headers,
+                              body: jsonEncode({
+                                "customer_id": customer_id.toString(),
+                                "event_id": widget.jobId.toString(),
+                                "event": "job.create",
+                                "message": message.text.toString()
+                              }));
+                      print(response.body);
+                      setState(() {
+                        isLoading = false;
+                      });
+                      if (jsonDecode(response.body)["status"] == 201) {
+                        getChat();
                         setState(() {
-                          isLoading = false;
+                          message.clear();
                         });
-                        if (jsonDecode(response.body)["status"] == 201) {
-                          getChat();
-                          setState(() {
-                            message.clear();
-                          });
-                          FocusScope.of(context).unfocus();
-                        }
-                      },
-                    ),
-                    fillColor: Colors.white,
-                    filled: true,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20)))),
+                        FocusScope.of(context).unfocus();
+                      }
+                      setState(() {
+                        count = 0;
+                      });
+                    } else {
+                      Fluttertoast.showToast(msg: "Please enter a message");
+                    }
+                  },
+                  child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: CircleAvatar(
+                        backgroundColor: Color(0xFF376139),
+                        child: Image.asset(
+                          "assets/images/send_2.png",
+                          scale: 2.5,
+                        ),
+                      )),
+                ))
+              ],
+            ),
           ),
         ),
       ),

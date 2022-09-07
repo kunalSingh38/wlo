@@ -51,6 +51,7 @@ class _SendMessageState extends State<SendMessage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
           centerTitle: false,
           title: Text(widget.messageFor.toString(),
@@ -80,6 +81,7 @@ class _SendMessageState extends State<SendMessage> {
                             });
                             showDialog(
                                 context: context,
+                                barrierColor: Colors.black,
                                 builder: (context) => AlertDialog(
                                       contentPadding: EdgeInsets.zero,
                                       content: Container(
@@ -170,12 +172,26 @@ class _SendMessageState extends State<SendMessage> {
                                                               'status'] ==
                                                           201) {
                                                         Fluttertoast.showToast(
-                                                            msg:
-                                                                "Message sent successfully");
+                                                            msg: jsonDecode(
+                                                                        response
+                                                                            .body)[
+                                                                    'message']
+                                                                .toString(),
+                                                            toastLength: Toast
+                                                                .LENGTH_LONG);
                                                         Navigator.of(context)
                                                             .pop();
                                                         Navigator.of(context)
                                                             .pop();
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      } else {
+                                                        Fluttertoast.showToast(
+                                                            msg: jsonDecode(
+                                                                        response
+                                                                            .body)[
+                                                                    'message']
+                                                                .toString());
                                                         Navigator.of(context)
                                                             .pop();
                                                       }
@@ -208,6 +224,7 @@ class _SendMessageState extends State<SendMessage> {
                           } else {
                             showDialog(
                                 context: context,
+                                barrierColor: Colors.black,
                                 builder: (context) => AlertDialog(
                                       contentPadding: EdgeInsets.zero,
                                       content: Container(
@@ -316,12 +333,28 @@ class _SendMessageState extends State<SendMessage> {
                                                               'status'] ==
                                                           201) {
                                                         Fluttertoast.showToast(
-                                                            msg:
-                                                                "Message sent successfully");
+                                                            msg: jsonDecode(
+                                                                        response
+                                                                            .body)[
+                                                                    'message']
+                                                                .toString(),
+                                                            toastLength: Toast
+                                                                .LENGTH_LONG);
                                                         Navigator.of(context)
                                                             .pop();
                                                         Navigator.of(context)
                                                             .pop();
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      } else {
+                                                        Fluttertoast.showToast(
+                                                            msg: jsonDecode(
+                                                                        response
+                                                                            .body)[
+                                                                    'message']
+                                                                .toString(),
+                                                            toastLength: Toast
+                                                                .LENGTH_LONG);
                                                         Navigator.of(context)
                                                             .pop();
                                                       }
@@ -354,12 +387,25 @@ class _SendMessageState extends State<SendMessage> {
                                     ));
                           }
                         },
-                        child: ListTile(
-                          title: Text(e['template_message'].toString()),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                            color: Colors.black,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                          child: Container(
+                            color: Colors.white,
+                            child: ListTile(
+                              title: Text(e['template_message'].toString()),
+                              trailing:
+                                  messages.length - 1 == messages.indexOf(e)
+                                      ? Icon(
+                                          Icons.add_circle_outline,
+                                          size: 20,
+                                          color: Colors.black,
+                                        )
+                                      : Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: Colors.black,
+                                        ),
+                            ),
                           ),
                         ),
                       ))
