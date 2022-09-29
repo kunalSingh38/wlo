@@ -243,16 +243,20 @@ class _ConversationState extends State<Conversation> {
                                 "event": "job.create",
                                 "message": message.text.toString()
                               }));
-                      print(response.body);
+
                       setState(() {
                         isLoading = false;
                       });
+
                       if (jsonDecode(response.body)["status"] == 201) {
                         getChat();
                         setState(() {
                           message.clear();
                         });
                         FocusScope.of(context).unfocus();
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: jsonDecode(response.body)["message"]);
                       }
                       setState(() {
                         count = 0;

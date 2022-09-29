@@ -6,8 +6,10 @@ import 'package:bordered_text/bordered_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -15,6 +17,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:super_tooltip/super_tooltip.dart';
@@ -105,11 +108,26 @@ class _ChangePageState extends State<JobsScreen11> {
     }
   }
 
+  Future<void> showRestartAppAlert() async {
+    if (!await Permission.location.isGranted) {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text("Restart Required"),
+                content: Text(
+                    "Please restart your phone for getting location of your device."),
+              ));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    if (Platform.isIOS) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => showRestartAppAlert());
+    }
     _getUser();
-    
   }
 
   // bool getWeek(DateTime today) {
@@ -132,6 +150,7 @@ class _ChangePageState extends State<JobsScreen11> {
       setState(() {
         access_token = prefs.getString('access_token').toString();
         vehicle_no = prefs.getString('vehicle_no').toString();
+
         name = prefs.getString('driverName').toString();
         profile_pic = prefs.getString('profile_pic').toString();
 
@@ -421,7 +440,7 @@ class _ChangePageState extends State<JobsScreen11> {
             ),
             content: new Text("Do you want to Log Out?"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -430,8 +449,16 @@ class _ChangePageState extends State<JobsScreen11> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () async {
+                  final service = FlutterBackgroundService();
+                  var isRunning = await service.isRunning();
+
+                  if (isRunning) {
+                    submitData();
+                    service.invoke("stopService");
+                    Fluttertoast.showToast(msg: "Service stopped");
+                  }
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
                   prefs.getKeys();
@@ -572,7 +599,7 @@ class _ChangePageState extends State<JobsScreen11> {
             ),
             content: new Text("Do you want to exit an App"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -581,7 +608,7 @@ class _ChangePageState extends State<JobsScreen11> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () {
                   exit(0);
                 },
@@ -1456,13 +1483,13 @@ class _ChangePageState extends State<JobsScreen11> {
   }
 
   showConfirmDialog(id, cancel, done, title, content) {
-    Widget cancelButton = FlatButton(
+    Widget cancelButton = ElevatedButton(
       child: Text(cancel),
       onPressed: () {
         Navigator.of(context).pop();
       },
     );
-    Widget doneButton = FlatButton(
+    Widget doneButton = ElevatedButton(
       child: Text(done),
       onPressed: () {
         Navigator.of(context).pop();

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:998675738682:android:36227a3c78584d146f0503",
         "android_client_info": {
-          "package_name": "com.wlo.smartCollect"
+          "package_name": "com.wlo.wlo_master"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "998675738682-8djjpsvvm2t91npe2mmr542abmhq0n2q.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.wlo.smartCollect",
+            "package_name": "com.wlo.wlo_master",
             "certificate_hash": "4a92cf98d7388b6c41c61018b72703bca2da4c70"
           }
         },
@@ -42,7 +42,7 @@
               "client_id": "998675738682-ftsfbps1mfu6jrh57stsodmam7k17cqa.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.wlo.smartCollect"
+                "bundle_id": "com.wlo.wlo_master"
               }
             }
           ]

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:bordered_text/bordered_text.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -299,7 +300,7 @@ class _ChangePageState extends State<VehicleChecklists> {
                 ),
                 content: Text(message),
                 actions: <Widget>[
-                  FlatButton(
+                  ElevatedButton(
                     child: Text(btnLabel),
                     onPressed: _onUpdateNowClicked,
                   ),
@@ -334,7 +335,7 @@ class _ChangePageState extends State<VehicleChecklists> {
             ),
             content: new Text("Do you want to Log Out?"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -343,7 +344,7 @@ class _ChangePageState extends State<VehicleChecklists> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () async {
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
@@ -904,6 +905,7 @@ class _ChangePageState extends State<VehicleChecklists> {
                                     log(jsonEncode(xmlList));
                                     var data = json.decode(response.body);
                                     print(data);
+
                                     if (response.statusCode == 201) {
                                       setState(() {
                                         _loading = false;
@@ -911,6 +913,7 @@ class _ChangePageState extends State<VehicleChecklists> {
 
                                       var dataRes = data['data'];
                                       print(dataRes);
+
                                       SharedPreferences prefs =
                                           await SharedPreferences.getInstance();
                                       prefs.setString(

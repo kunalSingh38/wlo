@@ -1,4 +1,4 @@
-package com.wlo.smartCollect
+package com.wlo.wlo_master
 
 import io.flutter.embedding.android.FlutterActivity
 

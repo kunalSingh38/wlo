@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 const String ALERT_DIALOG_TITLE = "Alert";
-const String BASE_URL = "wloapp.crowdrcrm.com";
-// const String BASE_URL = "webapp.wastelubricatingoils.co.uk";
+// const String BASE_URL = "wloapp.crowdrcrm.com";
+const String BASE_URL = "webapp.wastelubricatingoils.co.uk";
 const String API_PATH = "/v1";
-const String URL = "https://wloapp.crowdrcrm.com/v1";
-// const String URL = "https://webapp.wastelubricatingoils.co.uk/v1";
+// const String URL = "https://wloapp.crowdrcrm.com/v1";
+const String URL = "https://webapp.wastelubricatingoils.co.uk/v1";
 
 final String path = 'assets/images/';
 

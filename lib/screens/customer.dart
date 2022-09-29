@@ -257,7 +257,7 @@ class _ChangePageState extends State<CustomerList> {
                 ),
                 content: Text(message),
                 actions: <Widget>[
-                  FlatButton(
+                  ElevatedButton(
                     child: Text(btnLabel),
                     onPressed: _onUpdateNowClicked,
                   ),
@@ -293,7 +293,7 @@ class _ChangePageState extends State<CustomerList> {
             ),
             content: new Text("Do you want to Log Out?"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -302,7 +302,7 @@ class _ChangePageState extends State<CustomerList> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () async {
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
@@ -411,8 +411,6 @@ class _ChangePageState extends State<CustomerList> {
                             minWidth: 60.0,
                             height: 30.0,
                             child: RaisedButton(
-                              padding: const EdgeInsets.only(
-                                  top: 2, bottom: 2, left: 10, right: 10),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(25),

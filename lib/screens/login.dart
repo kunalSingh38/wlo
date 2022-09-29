@@ -4,6 +4,7 @@ import 'package:bordered_text/bordered_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -352,6 +353,11 @@ class _SplashScreenState extends State<LoginScreen> {
                             // print(response.body.toString() + " testttt");
                             var data1 = json.decode(response.body);
                             // print(data1['isDisplay']);
+                            final service = FlutterBackgroundService();
+                            var isRunning = await service.isRunning();
+                            if (!isRunning) {
+                              service.startService();
+                            }
                             if (data1['isDisplay'] == true) {
                               SharedPreferences prefs =
                                   await SharedPreferences.getInstance();

@@ -181,7 +181,7 @@ class _ChangePageState extends State<JobsDetails> {
                 ),
                 content: Text(message),
                 actions: <Widget>[
-                  FlatButton(
+                  ElevatedButton(
                     child: Text(btnLabel),
                     onPressed: _onUpdateNowClicked,
                   ),
@@ -315,7 +315,7 @@ class _ChangePageState extends State<JobsDetails> {
             ),
             content: new Text("Do you want to Log Out?"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -324,7 +324,7 @@ class _ChangePageState extends State<JobsDetails> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () async {
                   SharedPreferences preferences =
                       await SharedPreferences.getInstance();

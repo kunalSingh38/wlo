@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bordered_text/bordered_text.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,6 +19,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wlo_master/components/CustomRadioWidget.dart';
 import 'package:wlo_master/components/general.dart';
+import 'package:wlo_master/main.dart';
 
 import 'package:wlo_master/services/shared_preferences.dart';
 
@@ -319,7 +321,7 @@ class _ChangePageState extends State<JobsScreen> {
                 ),
                 content: Text(message),
                 actions: <Widget>[
-                  FlatButton(
+                  ElevatedButton(
                     child: Text(btnLabel),
                     onPressed: _onUpdateNowClicked,
                   ),
@@ -355,7 +357,7 @@ class _ChangePageState extends State<JobsScreen> {
             ),
             content: new Text("Do you want to Log Out?"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -364,8 +366,16 @@ class _ChangePageState extends State<JobsScreen> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () async {
+                  final service = FlutterBackgroundService();
+                  var isRunning = await service.isRunning();
+
+                  if (isRunning) {
+                    submitData();
+                    service.invoke("stopService");
+                    Fluttertoast.showToast(msg: "Service stopped");
+                  }
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
                   prefs.getKeys();
@@ -505,7 +515,7 @@ class _ChangePageState extends State<JobsScreen> {
             ),
             content: new Text("Do you want to exit an App"),
             actions: <Widget>[
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(false),
                 child: new Text(
                   "No",
@@ -514,7 +524,7 @@ class _ChangePageState extends State<JobsScreen> {
                   ),
                 ),
               ),
-              new FlatButton(
+              new ElevatedButton(
                 onPressed: () {
                   exit(0);
                 },

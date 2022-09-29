@@ -3,10 +3,17 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:location/location.dart' as lo;
 
 import 'package:page_transition/page_transition.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wlo_master/constants.dart';
 import 'package:wlo_master/screens/add_customer.dart';
 
 import 'package:wlo_master/screens/add_newjob.dart';
@@ -34,6 +41,7 @@ import 'package:wlo_master/screens/successful_screen.dart';
 import 'package:wlo_master/screens/view_checklist.dart';
 import 'package:wlo_master/screens/view_single_checklist.dart';
 import 'package:wlo_master/services/PushNotificationService.dart';
+import 'package:http/http.dart' as http;
 
 final GlobalKey<NavigatorState> navigatorKey =
     GlobalKey(debugLabel: "Main Navigator");
@@ -42,8 +50,21 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('A bg message just showed up :  ${message.messageId}');
 }
 
+lo.Location location = new lo.Location();
+// bool _serviceEnabled;
+// PermissionStatus _permissionGranted;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // _serviceEnabled = await location.serviceEnabled();
+  // if (!_serviceEnabled) {
+  //   _serviceEnabled = await location.requestService();
+  //   if (!_serviceEnabled) {
+  //     return;
+  //   }
+  // }
+
+  await initializeService();
   // await Firebase.initializeApp(); //for app
   await PushNotificationService().setupInteractedMessage(navigatorKey);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -55,6 +76,116 @@ void main() async {
   }
 }
 
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+  await service.configure(
+    androidConfiguration: AndroidConfiguration(
+      // this will executed when app is in foreground or background in separated isolate
+      onStart: onStart,
+      foregroundServiceNotificationTitle: "Service Running",
+      initialNotificationTitle: "Service Running",
+      // auto start service
+      autoStart: false,
+      isForegroundMode: true,
+    ),
+    iosConfiguration: IosConfiguration(
+      // auto start service
+      autoStart: false,
+
+      // this will executed when app is in foreground in separated isolate
+      onForeground: onStart,
+
+      // you have to enable background fetch capability on xcode project
+      onBackground: onIosBackground,
+    ),
+  );
+  // service.startService();
+}
+
+bool onIosBackground(ServiceInstance service) {
+  WidgetsFlutterBinding.ensureInitialized();
+  print('FLUTTER BACKGROUND FETCH');
+
+  return true;
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  int time = 0;
+  Map<String, String> headers = {
+    'Accept': 'application/json',
+  };
+  var response = await http.get(Uri.parse(URL + "/config"), headers: headers);
+
+  if (jsonDecode(response.body)['status'] == 200) {
+    time = int.parse(jsonDecode(response.body)['data']
+            ['background_delay_interval']
+        .toString());
+  }
+
+  Fluttertoast.showToast(msg: "Service starts");
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  submitData();
+
+  Timer.periodic(Duration(seconds: time), (timer) async {
+    submitData();
+  });
+}
+
+void submitData() async {
+  // Fluttertoast.showToast(msg: "Service run");
+
+  double latitudeGet = 0;
+  double longitudeGet = 0;
+
+  bool isLocationServiceEnabled = await Geolocator.isLocationServiceEnabled();
+
+  if (isLocationServiceEnabled) {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    latitudeGet = double.parse("${position.latitude}");
+    longitudeGet = double.parse("${position.longitude}");
+
+    final bool isConnected = await InternetConnectionChecker().hasConnection;
+
+    if (isConnected) {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      Map<String, String> headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + pref.getString("access_token").toString(),
+      };
+      var response = await http
+          .post(Uri.parse(URL + "/tracking"), headers: headers, body: {
+        "vehicle_id": pref.getString('vehicle_no').toString(),
+        "lat": latitudeGet.toString(),
+        "lng": longitudeGet.toString()
+      });
+      print(jsonEncode({
+        "vehicle_id": pref.getString('vehicle_no').toString(),
+        "lat": latitudeGet.toString(),
+        "lng": longitudeGet.toString()
+      }));
+      print(response.body);
+    } else {
+      Fluttertoast.showToast(
+          msg: "Check your internet connection.",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER);
+    }
+  } else {
+    Fluttertoast.showToast(
+        msg: "Please trun on location.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER);
+
+    Geolocator.openLocationSettings();
+  }
+}
+
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
@@ -63,10 +194,12 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _loggedIn = false;
   int id = 0;
+
   void initState() {
     super.initState();
-
+    // _determinePosition();
     _checkLoggedIn();
+    // _determinePosition();
   }
 
   MaterialColor createMaterialColor(Color color) {

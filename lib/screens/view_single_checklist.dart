@@ -189,7 +189,7 @@ class _ChangePageState extends State<VehicleSingleChecklist> {
                 ),
                 content: Text(message),
                 actions: <Widget>[
-                  FlatButton(
+                  ElevatedButton(
                     child: Text(btnLabel),
                     onPressed: _onUpdateNowClicked,
                   ),

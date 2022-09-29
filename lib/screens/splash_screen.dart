@@ -5,9 +5,12 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart' as loc;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wlo_master/components/location.dart';
 import 'package:wlo_master/constants.dart';
 
 import 'checklist_screen.dart';
@@ -31,25 +34,153 @@ class _SplashScreenState extends State<SplashScreen> {
   final splashDelay = 3;
   String formattedDate1 = "";
   String lastVisitDate = "";
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      await Geolocator.requestPermission();
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
+  }
+
+  void showAlert() async {
+    if (await location.hasPermission() == loc.PermissionStatus.granted) {
+      getDeviceId().then((di) {
+        print(di.toString());
+        _checkDevice(di).then((value) {
+          if (value == 200) {
+            Fluttertoast.showToast(
+                msg: "Device Registered.",
+                gravity: ToastGravity.BOTTOM,
+                toastLength: Toast.LENGTH_SHORT);
+            _checkLoggedIn();
+          } else {
+            showPhotoCaptureOptions(di);
+          }
+        });
+      });
+    } else {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(20))),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      "assets/images/placeholder.png",
+                      scale: 10,
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Text(
+                      "Use your location",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                actionsAlignment: MainAxisAlignment.spaceBetween,
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        showAlert();
+                      },
+                      child: Text(
+                        "NO THANKS",
+                        style: TextStyle(color: Colors.green[800]),
+                      )),
+                  TextButton(
+                      onPressed: () async {
+                        _determinePosition().then((value) {
+                          Navigator.of(context).pop();
+                          getDeviceId().then((di) {
+                            print(di.toString());
+                            _checkDevice(di).then((value) {
+                              if (value == 200) {
+                                Fluttertoast.showToast(
+                                    msg: "Device Registered.",
+                                    gravity: ToastGravity.BOTTOM,
+                                    toastLength: Toast.LENGTH_SHORT);
+                                _checkLoggedIn();
+                              } else {
+                                showPhotoCaptureOptions(di);
+                              }
+                            });
+                          });
+                        });
+                      },
+                      child: Text(
+                        "TURN ON",
+                        style: TextStyle(color: Colors.green[800]),
+                      ))
+                ],
+                content: Text(
+                  "This application collects location data to enable driver location tracking and display of location data within the backend system It does not collect data when the app is logged out. There is no support or use of advertising.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                ),
+              ));
+    }
+  }
+
+  loc.Location location = loc.Location();
   @override
   void initState() {
     super.initState();
-    getDeviceId().then((di) {
-      print(di.toString());
-      _checkDevice(di).then((value) {
-        if (value == 200) {
-          Fluttertoast.showToast(
-              msg: "Device Registered.",
-              gravity: ToastGravity.BOTTOM,
-              toastLength: Toast.LENGTH_SHORT);
-          _checkLoggedIn();
-        } else {
-          showPhotoCaptureOptions(di);
-        }
+    if (Platform.isAndroid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => showAlert());
+    } else {
+      _determinePosition();
+      getDeviceId().then((di) {
+        print(di.toString());
+        _checkDevice(di).then((value) {
+          if (value == 200) {
+            Fluttertoast.showToast(
+                msg: "Device Registered.",
+                gravity: ToastGravity.BOTTOM,
+                toastLength: Toast.LENGTH_SHORT);
+            _checkLoggedIn();
+          } else {
+            showPhotoCaptureOptions(di);
+          }
+        });
       });
-    });
-
-    // checkIsTodayVisit();
+    }
   }
 
   Future<int> _checkDevice(String deviceId) async {
